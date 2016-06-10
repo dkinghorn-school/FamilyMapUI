@@ -1,140 +1,184 @@
 package com.example.devonkinghorn.familymapui;
 
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Pair;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.devonkinghorn.familymapui.Container.UserInfo;
+import com.example.devonkinghorn.familymapui.Search.SearchActivity;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URL;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback{
   private EditText username;
   private EditText password;
   private EditText server;
   private EditText port;
   private Button submit;
-  DownloadTask task;
+  private GoogleMap map;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.login_layout);
-    username = (EditText) findViewById(R.id.username);
-    password = (EditText) findViewById(R.id.password);
-    server = (EditText) findViewById(R.id.server);
-    port = (EditText) findViewById(R.id.port);
+    setContentView(R.layout.activity_main);
 
-    submit = (Button) findViewById(R.id.submit);
-    submit.setOnClickListener(new View.OnClickListener(){
-      @Override
-      public void onClick(View v){
-        submitButtonClicked();
-      }
-    });
-    makeToast("welcome");
-    resetViews();
-  }
-
-  private void resetViews(){
+    MapFragment mMapFragment = MapFragment.newInstance();
+    android.app.FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+    fragmentTransaction.add(R.id.fragment_container, mMapFragment);
+    fragmentTransaction.commit();
+    mMapFragment.getMapAsync(this);
 
   }
+  @Override
+  public void onMapReady(GoogleMap googleMap){
+    map = googleMap;
+  }
+  @Override
+  protected void onResume(){
+    super.onResume();
+    getUserInfo();
+  }
+  private void getUserInfo(){
+    if(UserInfo.userName == null){
+      Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
 
-  private void submitButtonClicked(){
-//    Intent intent = new Intent(this, HttpClient.class);
-//    startActivityForResult(intent, REQ_CODE_ORDER_INFO);
-//    String username = this.username.getText().toString();
-//    String password =
+      startActivity(intent);
+//        Intent intent = new Intent(getActivity(),MainActivity.class);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+////        startActivity(intent);
+////        getActivity().finish();
+////        return true;
+    } else {
+      loadData();
+    }
 
-    JSONObject body = new JSONObject();
-
+  }
+  private void loadData(){
     try {
-      body.put("username", this.username.getText().toString());
-      body.put("password", this.password.getText().toString());
-      String urlString = "http://"+
-              this.server.getText().toString() +
-              ":" +
-              this.port.getText().toString() +
-              "/user/login";
-      URL url = new URL(urlString);
-      task = new DownloadTask();
-      task.execute(new Pair<URL,JSONObject>(url,body));
-//      HttpClient client = new HttpClient();
-//      client.post(url,body);
-    }catch (Exception e){
-      //todo: show error toast
+      URL people = new URL("http://" +
+              UserInfo.url + ":" +
+              UserInfo.port + "/person");
+      URL event = new URL("http://" +
+              UserInfo.url + ":" +
+              UserInfo.port + "/event");
+      new GetData().execute(people,event);
+    }catch(Exception e){
       e.printStackTrace();
-      makeToast("error Loging in");
     }
-    System.out.println(username);
   }
-  public void makeToast(String message){
-    System.out.println("printingToast "+message);
-    Toast.makeText(getApplicationContext(),message,Toast.LENGTH_SHORT).show();
-  }
-  public void loggedIn(JSONObject json){
-    System.out.println(json.toString());
-    if(json.has("message")){
+  private void addPerson(JSONObject json){
 
-      try {
-        makeToast(json.getString("message"));
-      } catch (JSONException e) {
-        e.printStackTrace();
+  }
+  private void dataLoaded(JSONObject res){
+    System.out.println(res.toString());
+    try{
+      JSONArray people = res.getJSONArray("people");
+      JSONArray events = res.getJSONArray("events");
+      for(int i = 0; i < people.length(); i++){
+        addPerson(people.getJSONObject(i));
       }
-    }
-    else if(json.has("userName")){
-      String message = "welcome ";
-      try {
-        message += json.getString("userName");
-      } catch (JSONException e) {
-        e.printStackTrace();
-      }
-      makeToast(message);
-    }else {
-      makeToast("error Logging in");
+    }catch (Exception e){
+      e.printStackTrace();
     }
   }
-  public class DownloadTask extends AsyncTask<Pair<URL,JSONObject>,Integer,JSONObject>{
+  protected class GetData extends AsyncTask<URL,Integer,JSONObject> {
     @Override
-    protected JSONObject doInBackground(Pair<URL,JSONObject>... urls){
+    protected JSONObject doInBackground(URL... urls){
       HttpClient client = new HttpClient();
+      JSONObject toReturn = new JSONObject();
       long totalSize = 0;
 //      String response = client.post(urls[0].first,urls[0].second);
       JSONObject response = new JSONObject();
       try {
-        String str = client.post(urls[0].first,urls[0].second);
-        if(str != null){
-          return new JSONObject(str);
-        }
 
+        String str = client.post(urls[0],new JSONObject(),UserInfo.authorization);
+        if(str != null){
+          toReturn.put("people", new JSONObject(str));
+        }
+        str = client.post(urls[1],new JSONObject(),UserInfo.authorization);
+        if(str != null){
+          toReturn.put("events", new JSONObject(str));
+        }
 //        loggedIn(response);
 
       } catch (JSONException e) {
-        makeToast("error Loging in");
+        Toast.makeText(getApplicationContext(),"error Loging data",Toast.LENGTH_SHORT).show();
         e.printStackTrace();
       }
       System.out.println(response.toString());
-      JSONObject toReturn = new JSONObject();
+//      JSONObject toReturn = new JSONObject();
       return toReturn;
     }
     @Override
     protected void onPostExecute(JSONObject response){
-      loggedIn(response);
+      dataLoaded(response);
     }
-    @Override
-    protected void onProgressUpdate(Integer... progress){
-
-    }
-    private void publishProgress(int progress){
-
-    }
-
   }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.main_fragment_menu, menu);
+    return true;
+//    return super.onCreateOptionsMenu(menu);
+  }
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    // Handle item selection
+    switch (item.getItemId()) {
+      case R.id.search:
+        Intent intent = new Intent(getApplicationContext(),SearchActivity.class);
+        startActivity(intent);
+        return true;
+      case R.id.filter:
+
+        return true;
+      case R.id.settings:
+        intent = new Intent(getApplicationContext(),SettingsActivity.class);
+        startActivity(intent);
+        return true;
+    }
+    return false;
+  }
+
+  //TODO: do this
+//  @Override
+//  public boolean onOptionsItemSelected(MenuItem item) {
+//    switch(item.getItemId()){
+////      case R.id.menu_up_button:
+////        Intent intent = new Intent(getActivity(),MainActivity.class);
+////        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+////        startActivity(intent);
+////        getActivity().finish();
+////        return true;
+////
+////      case android.R.id.home:
+////        getActivity().finish();
+////        return true;
+//      default:
+//        return super.onOptionsItemSelected(item);
+//    }
+//  }
+
+
 
 
 }

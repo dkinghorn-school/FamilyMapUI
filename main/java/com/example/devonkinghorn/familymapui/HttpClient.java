@@ -16,12 +16,13 @@ import java.net.URL;
  * Created by devonkinghorn on 6/1/16.
  */
 public class HttpClient {
-  public String post(URL url, JSONObject body){
+  public String post(URL url, JSONObject body,String authorization){
     try {
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 //      connection.setRequestMethod("POST");
       connection.setDoOutput(true);
       connection.setChunkedStreamingMode(0);
+      connection.setRequestProperty ("Authorization", authorization);
       String jsonOutput = body.toString();
       OutputStream os = connection.getOutputStream();
       OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
