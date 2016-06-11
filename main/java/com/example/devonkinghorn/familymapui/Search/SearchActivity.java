@@ -22,7 +22,7 @@ public class SearchActivity extends AppCompatActivity {
     //get all people
     //person.toString.toLower().contains(input.toLower())
 
-    //repeat for events
+    //repeat for lifeEvents
 
   }
   private void onFinish(){

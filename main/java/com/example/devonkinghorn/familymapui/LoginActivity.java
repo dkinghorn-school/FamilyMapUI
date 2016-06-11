@@ -28,7 +28,7 @@ public class LoginActivity extends AppCompatActivity {
   private EditText port;
   private Button submit;
   private GoogleMap myMap;
-  DownloadTask task;
+//  DownloadTask task;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -50,7 +50,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     port.setText("8080");
-    server.setText("192.168.1.6");
+    server.setText("10.24.66.4");
     username.setText("d");
     password.setText("k");
     JSONObject body = new JSONObject();
@@ -66,8 +66,18 @@ public class LoginActivity extends AppCompatActivity {
               this.port.getText().toString() +
               "/user/login";
       URL url = new URL(urlString);
-      task = new DownloadTask();
-      task.execute(new Pair<URL,JSONObject>(url,body));
+      new HttpWithCallback().post(url, body, UserInfo.authorization, (String str) -> {
+        System.out.println(str);
+        try {
+          loggedIn(new JSONObject(str));
+        } catch (JSONException e) {
+          makeToast("unsuccessful");
+          e.printStackTrace();
+        }
+        return "";
+      });
+//      task = new DownloadTask();
+//      task.execute(new Pair<URL,JSONObject>(url,body));
 //      HttpClient client = new HttpClient();
 //      client.post(url,body);
     }catch (Exception e){
@@ -119,8 +129,18 @@ public class LoginActivity extends AppCompatActivity {
               this.port.getText().toString() +
               "/user/login";
       URL url = new URL(urlString);
-      task = new DownloadTask();
-      task.execute(new Pair<URL,JSONObject>(url,body));
+      new HttpWithCallback().post(url, body, UserInfo.authorization, (String str) -> {
+        System.out.println(str);
+        try {
+          loggedIn(new JSONObject(str));
+        } catch (JSONException e) {
+          makeToast("unsuccessful");
+          e.printStackTrace();
+        }
+        return "";
+      });
+//      task = new DownloadTask();
+//      task.execute(new Pair<URL,JSONObject>(url,body));
 //      HttpClient client = new HttpClient();
 //      client.post(url,body);
     }catch (Exception e){
@@ -185,8 +205,18 @@ public class LoginActivity extends AppCompatActivity {
                 "/person/" +
                 json.getString("personId");
         URL url = new URL(urlString);
-        GetUserInfo task = new GetUserInfo();
-        task.execute(new Pair<URL,String>(url,json.getString("Authorization")));
+        new HttpWithCallback().post(url, json, UserInfo.authorization, (String str) -> {
+          System.out.println(str);
+          try {
+            receivedUserInfo(new JSONObject(str));
+          } catch (JSONException e) {
+            e.printStackTrace();
+            makeToast("fail");
+          }
+          return "";
+        });
+//        GetUserInfo task = new GetUserInfo();
+//        task.execute(new Pair<URL,String>(url,json.getString("Authorization")));
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -199,70 +229,70 @@ public class LoginActivity extends AppCompatActivity {
   /**
    *
    */
-  protected class GetUserInfo extends AsyncTask<Pair<URL,String>,Integer,JSONObject> {
-    @Override
-    protected JSONObject doInBackground(Pair<URL,String>... urls){
-      HttpClient client = new HttpClient();
-      long totalSize = 0;
-//      String response = client.post(urls[0].first,urls[0].second);
-      JSONObject response = new JSONObject();
-      try {
-        String str = client.post(urls[0].first,new JSONObject(),urls[0].second);
-        if(str != null){
-          return new JSONObject(str);
-        }
-
-//        loggedIn(response);
-
-      } catch (JSONException e) {
-        makeToast("error Loging in");
-        e.printStackTrace();
-      }
-      System.out.println(response.toString());
-      JSONObject toReturn = new JSONObject();
-      return toReturn;
-    }
-    @Override
-    protected void onPostExecute(JSONObject response){
-      receivedUserInfo(response);
-    }
-  }
-  public class DownloadTask extends AsyncTask<Pair<URL,JSONObject>,Integer,JSONObject>{
-    @Override
-    protected JSONObject doInBackground(Pair<URL,JSONObject>... urls){
-      HttpClient client = new HttpClient();
-      long totalSize = 0;
-//      String response = client.post(urls[0].first,urls[0].second);
-      JSONObject response = new JSONObject();
-      try {
-        String str = client.post(urls[0].first,urls[0].second,"");
-        if(str != null){
-          return new JSONObject(str);
-        }
-
-//        loggedIn(response);
-
-      } catch (JSONException e) {
-        makeToast("error Loging in");
-        e.printStackTrace();
-      }
-      System.out.println(response.toString());
-      JSONObject toReturn = new JSONObject();
-      return toReturn;
-    }
-    @Override
-    protected void onPostExecute(JSONObject response){
-      loggedIn(response);
-    }
-    @Override
-    protected void onProgressUpdate(Integer... progress){
-
-    }
-    private void publishProgress(int progress){
-
-    }
-
-  }
+//  protected class GetUserInfo extends AsyncTask<Pair<URL,String>,Integer,JSONObject> {
+//    @Override
+//    protected JSONObject doInBackground(Pair<URL,String>... urls){
+//      HttpClient client = new HttpClient();
+//      long totalSize = 0;
+////      String response = client.post(urls[0].first,urls[0].second);
+//      JSONObject response = new JSONObject();
+//      try {
+//        String str = client.post(urls[0].first,new JSONObject(),urls[0].second);
+//        if(str != null){
+//          return new JSONObject(str);
+//        }
+//
+////        loggedIn(response);
+//
+//      } catch (JSONException e) {
+//        makeToast("error Loging in");
+//        e.printStackTrace();
+//      }
+//      System.out.println(response.toString());
+//      JSONObject toReturn = new JSONObject();
+//      return toReturn;
+//    }
+//    @Override
+//    protected void onPostExecute(JSONObject response){
+//      receivedUserInfo(response);
+//    }
+//  }
+//  public class DownloadTask extends AsyncTask<Pair<URL,JSONObject>,Integer,JSONObject>{
+//    @Override
+//    protected JSONObject doInBackground(Pair<URL,JSONObject>... urls){
+//      HttpClient client = new HttpClient();
+//      long totalSize = 0;
+////      String response = client.post(urls[0].first,urls[0].second);
+//      JSONObject response = new JSONObject();
+//      try {
+//        String str = client.post(urls[0].first,urls[0].second,"");
+//        if(str != null){
+//          return new JSONObject(str);
+//        }
+//
+////        loggedIn(response);
+//
+//      } catch (JSONException e) {
+//        makeToast("error Loging in");
+//        e.printStackTrace();
+//      }
+//      System.out.println(response.toString());
+//      JSONObject toReturn = new JSONObject();
+//      return toReturn;
+//    }
+//    @Override
+//    protected void onPostExecute(JSONObject response){
+//      loggedIn(response);
+//    }
+//    @Override
+//    protected void onProgressUpdate(Integer... progress){
+//
+//    }
+//    private void publishProgress(int progress){
+//
+//    }
+//
+//  }
 
 
 }

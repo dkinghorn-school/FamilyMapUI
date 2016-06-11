@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.devonkinghorn.familymapui.Container.Event;
 import com.example.devonkinghorn.familymapui.R;
 
 /**
@@ -19,5 +18,6 @@ public class LifeEventFragment extends Fragment {
     // Inflate the layout for this fragment
     return inflater.inflate(R.layout.life_event, container, false);
   }
+
 
 }
