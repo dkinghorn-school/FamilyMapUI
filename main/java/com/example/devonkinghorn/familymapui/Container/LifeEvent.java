@@ -1,7 +1,9 @@
-package com.example.devonkinghorn.familymapui.Container;
+package com.example.devonkinghorn.familymapui.container;
 
 import android.graphics.Color;
 
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONObject;
@@ -9,7 +11,7 @@ import org.json.JSONObject;
 /**
  * Created by devonkinghorn on 6/8/16.
  */
-public class LifeEvent {
+public class LifeEvent implements Comparable<LifeEvent>{
   String eventId;
   String personId;
   Double latitude;
@@ -17,9 +19,9 @@ public class LifeEvent {
   String country;
   String city;
   String description;
-  Double year;
+  Integer year;
   String descendant;
-  int color;
+  float color;
   LatLng coordinates;
   Boolean visible;
 
@@ -34,6 +36,28 @@ public class LifeEvent {
 //        "year":"1910",
 //        "descendant":"d"
 //},
+  private float getMarkerColor(){
+    switch(description){
+      case "marriage":
+        return BitmapDescriptorFactory.HUE_AZURE;
+      case "christening":
+        return BitmapDescriptorFactory.HUE_BLUE;
+      case "baptism":
+        return BitmapDescriptorFactory.HUE_CYAN;
+      case "census":
+        return BitmapDescriptorFactory.HUE_GREEN;
+      case "birth":
+        return BitmapDescriptorFactory.HUE_MAGENTA;
+      case "death":
+        return BitmapDescriptorFactory.HUE_ORANGE;
+//      case "ae":
+//        return BitmapDescriptorFactory.HUE_RED;
+//      case "vb":
+//        return BitmapDescriptorFactory.HUE_ROSE;
+      default:
+        return BitmapDescriptorFactory.HUE_VIOLET;
+    }
+  }
 
   public LifeEvent(JSONObject json){
     try{
@@ -43,15 +67,31 @@ public class LifeEvent {
       longitude = json.getDouble("longitude");
       country = json.getString("country");
       city = json.getString("city");
-      description = json.getString("description");
-      year = json.getDouble("year");
+      description = json.getString("description").toLowerCase();
+      year = json.getInt("year");
       coordinates = new LatLng(latitude,longitude);
-      color = Color.BLUE;
+      color = getMarkerColor();
       visible = true;
 //      Model.eventTypes.add(description);
     }catch(Exception e){
       e.printStackTrace();
     }
+
+  }
+
+  @Override
+  public int compareTo(LifeEvent lifeEvent){
+    if(description.equals("birth") || lifeEvent.description.equals("death"))
+      return 1;
+    if(lifeEvent.description.equals("birth") || description.equals("death"))
+      return -1;
+
+    if(lifeEvent.year != 0 && year != 0){
+      if(lifeEvent.year - year != 0){
+        return lifeEvent.year - year;
+      }
+    }
+    return this.description.compareTo(lifeEvent.description);
 
   }
   public Boolean getVisible(){
@@ -85,7 +125,7 @@ public class LifeEvent {
     return description;
   }
 
-  public Double getYear() {
+  public Integer getYear() {
     return year;
   }
 
@@ -93,7 +133,7 @@ public class LifeEvent {
     return descendant;
   }
 
-  public int getColor() {
+  public float getColor() {
     return color;
   }
 

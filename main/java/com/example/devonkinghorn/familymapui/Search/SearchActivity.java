@@ -1,4 +1,4 @@
-package com.example.devonkinghorn.familymapui.Search;
+package com.example.devonkinghorn.familymapui.search;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

@@ -1,4 +1,4 @@
-package com.example.devonkinghorn.familymapui.Container;
+package com.example.devonkinghorn.familymapui.container;
 
 /**
  * Created by devonkinghorn on 6/8/16.

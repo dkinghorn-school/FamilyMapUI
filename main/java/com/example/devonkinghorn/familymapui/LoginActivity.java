@@ -1,16 +1,14 @@
 package com.example.devonkinghorn.familymapui;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Pair;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.devonkinghorn.familymapui.Container.UserInfo;
+import com.example.devonkinghorn.familymapui.container.UserInfo;
 import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONException;
@@ -39,18 +37,15 @@ public class LoginActivity extends AppCompatActivity {
     port = (EditText) findViewById(R.id.port);
 
     submit = (Button) findViewById(R.id.submit);
-    submit.setOnClickListener(new View.OnClickListener(){
-      @Override
-      public void onClick(View v){
-        submitButtonClicked();
-      }
+    submit.setOnClickListener((View v)->{
+          submitButtonClicked();
     });
     makeToast("welcome");
     resetViews();
 
 
     port.setText("8080");
-    server.setText("10.24.66.4");
+    server.setText("192.168.1.5");
     username.setText("d");
     password.setText("k");
     JSONObject body = new JSONObject();
@@ -74,7 +69,6 @@ public class LoginActivity extends AppCompatActivity {
           makeToast("unsuccessful");
           e.printStackTrace();
         }
-        return "";
       });
 //      task = new DownloadTask();
 //      task.execute(new Pair<URL,JSONObject>(url,body));
@@ -137,7 +131,6 @@ public class LoginActivity extends AppCompatActivity {
           makeToast("unsuccessful");
           e.printStackTrace();
         }
-        return "";
       });
 //      task = new DownloadTask();
 //      task.execute(new Pair<URL,JSONObject>(url,body));
@@ -213,7 +206,6 @@ public class LoginActivity extends AppCompatActivity {
             e.printStackTrace();
             makeToast("fail");
           }
-          return "";
         });
 //        GetUserInfo task = new GetUserInfo();
 //        task.execute(new Pair<URL,String>(url,json.getString("Authorization")));

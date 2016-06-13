@@ -1,8 +1,11 @@
-package com.example.devonkinghorn.familymapui.Container;
+package com.example.devonkinghorn.familymapui.container;
 
 /**
  * Created by devonkinghorn on 6/10/16.
  */
 public interface Callback<V> {
-  V run(String str);
+  void run(V callback);
+//  void runVoid();
+//   run(V callback);
+//  void run(boolean b);
 }

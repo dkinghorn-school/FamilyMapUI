@@ -1,30 +1,20 @@
 package com.example.devonkinghorn.familymapui;
 
 import android.os.AsyncTask;
-import android.widget.Toast;
 
-import com.example.devonkinghorn.familymapui.Container.UserInfo;
+import com.example.devonkinghorn.familymapui.container.Callback;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.Callable;
 
 /**
  * Created by devonkinghorn on 6/9/16.
  */
 public class HttpWithCallback {
-  public interface Callback<V> {
-    V run(String str);
-  }
+//  public interface Callback<V> {
+//    V run(String str);
+//  }
   Callback callback;
   JSONObject data;
   String authorization;
@@ -59,7 +49,7 @@ public class HttpWithCallback {
     }
   }
 
-  public void post(URL url, JSONObject body, String authorization, Callback callback){
+  public void post(URL url, JSONObject body, String authorization, Callback<String> callback){
     this.callback = callback;
     this.authorization = authorization;
     data = body;

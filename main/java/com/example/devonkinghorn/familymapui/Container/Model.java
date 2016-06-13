@@ -1,10 +1,9 @@
-package com.example.devonkinghorn.familymapui.Container;
-
-import android.graphics.Color;
+package com.example.devonkinghorn.familymapui.container;
 
 import com.example.devonkinghorn.familymapui.HttpWithCallback;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
@@ -15,6 +14,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Callable;
 
 /**
  * Created by devonkinghorn on 6/8/16.
@@ -24,12 +25,10 @@ public class Model {
   public static volatile Set<LifeEvent> lifeEvents;
   public static volatile Person focusPerson;
   public static volatile LifeEvent focusEvent;
-  public static volatile Set<Filter> filters;
-  public static volatile LineSettings lineSettings;
-  public static volatile int mapType;
   public static GoogleMap map;
   public static Set<String> eventTypes;
-
+  private static boolean initializedFilters = false;
+  public static MapFragment mapFragment;
 //  {  person JSON
 //    "descendant":"d",
 //          "personID":"491zb6l6-mz82-kton-6asv-nphmjlu81ge6",
@@ -60,7 +59,9 @@ public class Model {
       e.printStackTrace();
     }
   }
+
   private void loadEvents(JSONArray array){
+
     eventTypes = new HashSet();
     lifeEvents = new HashSet();
     try{
@@ -69,16 +70,22 @@ public class Model {
         eventTypes.add(lifeEvent.description);
         lifeEvents.add(lifeEvent);
       }
+      if(!initializedFilters) {
+        initializedFilters = true;
+        Settings.eventFilters = new HashMap();
+        for (String type : eventTypes) {
+          Settings.eventFilters.put(type, true);
+        }
+      }
     }catch(Exception e){
       e.printStackTrace();
     }
-    if(map!=null){
-      loadIcons();
-    }
-
   }
 
-  public void loadData() {
+  public void loadData(Callback callback) {
+    if(UserInfo.url == null){
+      return;
+    }
     try {
       URL people = new URL("http://" +
               UserInfo.url + ":" +
@@ -93,33 +100,69 @@ public class Model {
         } catch (Exception e) {
           e.printStackTrace();
         }
-        return "";
       });
       new HttpWithCallback().post(event, new JSONObject(), UserInfo.authorization, (String str) -> {
         try {
           System.out.println(str);
           loadEvents(new JSONObject(str).getJSONArray("data"));
+          callback.run(null);
         } catch (Exception e) {
           e.printStackTrace();
         }
         System.out.println(str);
-        return "";
       });
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
-    public static void loadIcons(){
-    if(lifeEvents != null) {
-      for (LifeEvent lifeEvent : Model.lifeEvents) {
-        map.addMarker(new MarkerOptions()
-                .position(lifeEvent.getCoordinates())
-                .title(lifeEvent.getEventId())
-//                .icon(BitmapDescriptorFactory.defaultMarker(lifeEvent.color))
-                .visible(lifeEvent.visible)
-        );
+
+  public static Person getPerson(String personId){
+    if(personId != null){
+      return people.get(personId);
+    }
+    return null;
+  }
+
+  public static LifeEvent getEvent(String eventId){
+    if(eventId == null){
+      return null;
+    }
+    for(LifeEvent lifeEvent: lifeEvents){
+      if(lifeEvent.getEventId().equals(eventId)){
+        return lifeEvent;
       }
     }
-
+    return null;
   }
+
+  /**
+   *
+   * @param personId id of person
+   * @return returns all LifeEvents associated with that personId
+   */
+  public TreeSet<LifeEvent> getPersonLifeEvents(String personId){
+    if(personId == null)
+      return null;
+    TreeSet<LifeEvent> eventTreeSet = new TreeSet();
+    for(LifeEvent lifeEvent : lifeEvents){
+      if(lifeEvent.personId.equals(personId))
+        eventTreeSet.add(lifeEvent);
+    }
+    return eventTreeSet;
+  }
+
+  /**
+   *
+   * @param personId id of the person you are looking for
+   * @return returns the first event for the person
+   */
+  public LifeEvent firstLifeEvent(String personId){
+    if(personId == null)
+      return null;
+    TreeSet<LifeEvent> events = getPersonLifeEvents(personId);
+    if(events.first() != null)
+      return events.first();
+    return null;
+  }
+
 }

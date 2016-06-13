@@ -1,7 +1,6 @@
 package com.example.devonkinghorn.familymapui;
 
 import android.content.Intent;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,11 +10,15 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.example.devonkinghorn.familymapui.Container.LifeEvent;
-import com.example.devonkinghorn.familymapui.Container.Model;
-import com.example.devonkinghorn.familymapui.Container.UserInfo;
-import com.example.devonkinghorn.familymapui.Fragment.PersonFragment;
-import com.example.devonkinghorn.familymapui.Search.SearchActivity;
+import com.example.devonkinghorn.familymapui.container.LifeEvent;
+import com.example.devonkinghorn.familymapui.container.Model;
+import com.example.devonkinghorn.familymapui.container.Settings;
+import com.example.devonkinghorn.familymapui.container.UserInfo;
+import com.example.devonkinghorn.familymapui.fragment.MMapFragment;
+import com.example.devonkinghorn.familymapui.fragment.PersonFragment;
+import com.example.devonkinghorn.familymapui.personPackage.PersonActivity;
+import com.example.devonkinghorn.familymapui.search.SearchActivity;
+import com.example.devonkinghorn.familymapui.filter.FilterActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -26,76 +29,116 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback{
+public class MainActivity extends AppCompatActivity{
   private EditText username;
   private EditText password;
   private EditText server;
   private EditText port;
   private Button submit;
 
+  private MMapFragment mapFragment;
+
+  private void updateBottomFragment(){
+    //add in text at bottom
+    PersonFragment personFragment = new PersonFragment();
+    Bundle bundle = new Bundle();
+//    if(Model.focusEvent != null) {
+//      bundle.putString("eventId", Model.focusEvent.getEventId());
+//    }
+    personFragment.setArguments(bundle);
+    FragmentManager manager = getSupportFragmentManager();
+    manager.beginTransaction()
+            .replace(R.id.fragment_person,personFragment).commit();
+    personFragment.onClickCallback((String eventId)->{
+      Intent intent = new Intent(getApplicationContext(),PersonActivity.class);
+      startActivity(intent);
+    });
+  }
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    //initializes settings
+    Settings.initialize();
+
+
     setContentView(R.layout.activity_main);
-//    Fragment
-    PersonFragment personFragment = new PersonFragment();
-    Bundle bundle = new Bundle();
-    bundle.putString("title","yes");
-    personFragment.setArguments(bundle);
-    MapFragment mMapFragment = MapFragment.newInstance();
-    android.app.FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+
+    // add in googlemap
+//    MapFragment mMapFragment = MapFragment.newInstance();
+//    android.app.FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
 //    fragmentTransaction.add(R.id.fragment_container, mMapFragment);
 //    fragmentTransaction.replace(R.id.fragment_person, personFragment);
-    fragmentTransaction.addToBackStack(null);
-    fragmentTransaction.commit();
+//    fragmentTransaction.addToBackStack(null);
+//    fragmentTransaction.commit();
     FragmentManager manager = getSupportFragmentManager();
-    manager.beginTransaction()
-            .add(R.id.fragment_person,personFragment).commit();
-    mMapFragment.getMapAsync(this);
-
-  }
-  @Override
-  public void onMapReady(GoogleMap googleMap){
-    Model.map = googleMap;
-    Model.loadIcons();
-    Model.map.setOnMarkerClickListener((Marker m)->{
-      System.out.println(m.getTitle());
-//      LifeEvent event;
-      for(LifeEvent e: Model.lifeEvents){
-        if(e.getEventId().equals(m.getTitle())){
-          Model.map.animateCamera(CameraUpdateFactory.newLatLng(e.getCoordinates()));
-          Model.focusEvent = e;
-          break;
-        }
-      }
-
-      return true;
+    mapFragment = new MMapFragment();
+    manager.beginTransaction().add(R.id.fragment_container, mapFragment).commit();
+    mapFragment.setOnMapClickListener(()->{
+            Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+            startActivity(intent);
     });
+
+
+    updateBottomFragment();
+//    mMapFragment.getMapAsync(this);
+
+
   }
+//  @Override
+//  public void onMapReady(GoogleMap googleMap){
+//    Model.map = googleMap;
+//    Model.loadIcons();
+//    // when marker is clicked
+//    Model.map.setOnMarkerClickListener((Marker m)->{
+//      System.out.println(m.getTitle());
+////      LifeEvent event;
+//      for(LifeEvent e: Model.lifeEvents){
+//        if(e.getEventId().equals(m.getTitle())){
+//          Model.map.animateCamera(CameraUpdateFactory.newLatLng(e.getCoordinates()));
+//          Model.focusEvent = e;
+//          updateLifeEventFragment();
+//          break;
+//        }
+//      }
+//
+//      return true;
+//    });
+//  }
 
   @Override
   protected void onResume(){
     super.onResume();
     getUserInfo();
-    Model.loadIcons();
   }
   private void getUserInfo(){
     if(UserInfo.userName == null){
       Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
-
       startActivity(intent);
-//        Intent intent = new Intent(getActivity(),MainActivity.class);
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-////        startActivity(intent);
-////        getActivity().finish();
-////        return true;
-    } else {
-      loadData();
+
     }
+    loadData();
 
   }
   private void loadData(){
-    new Model().loadData();
+    new Model().loadData((Object n)->{
+      mapFragment.updateMap();
+      if(Model.lifeEvents != null) {
+
+//        for (LifeEvent lifeEvent : Model.lifeEvents) {
+//          if(Settings.eventFilters.get(lifeEvent.getDescription())) {
+//            Model.map.addMarker(new MarkerOptions()
+//                            .position(lifeEvent.getCoordinates())
+//                            .title(lifeEvent.getEventId())
+////                .icon(BitmapDescriptorFactory.defaultMarker(lifeEvent.color))
+//                            .visible(lifeEvent.getVisible())
+//            );
+//          }
+//        }
+//        if(Model.focusEvent != null ){
+//          Model.map.animateCamera(CameraUpdateFactory.newLatLng(Model.focusEvent.getCoordinates()));
+//        }
+      }
+    });
   }
   private void addPerson(JSONObject json){
 
@@ -112,39 +155,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
       e.printStackTrace();
     }
   }
-//  protected class GetData extends AsyncTask<URL,Integer,JSONObject> {
-//    @Override
-//    protected JSONObject doInBackground(URL... urls){
-//      HttpClient client = new HttpClient();
-//      JSONObject toReturn = new JSONObject();
-//      long totalSize = 0;
-////      String response = client.post(urls[0].first,urls[0].second);
-//      JSONObject response = new JSONObject();
-//      try {
-//
-//        String str = client.post(urls[0],new JSONObject(),UserInfo.authorization);
-//        if(str != null){
-//          toReturn.put("people", new JSONObject(str));
-//        }
-//        str = client.post(urls[1],new JSONObject(),UserInfo.authorization);
-//        if(str != null){
-//          toReturn.put("lifeEvents", new JSONObject(str));
-//        }
-////        loggedIn(response);
-//
-//      } catch (JSONException e) {
-//        Toast.makeText(getApplicationContext(),"error Loging data",Toast.LENGTH_SHORT).show();
-//        e.printStackTrace();
-//      }
-//      System.out.println(response.toString());
-////      JSONObject toReturn = new JSONObject();
-//      return toReturn;
-//    }
-//    @Override
-//    protected void onPostExecute(JSONObject response){
-//      dataLoaded(response);
-//    }
-//  }
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -162,14 +172,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         startActivity(intent);
         return true;
       case R.id.filter:
-
+        intent = new Intent(getApplicationContext(),FilterActivity.class);
+        startActivity(intent);
         return true;
       case R.id.settings:
         intent = new Intent(getApplicationContext(),SettingsActivity.class);
         startActivity(intent);
         return true;
     }
-    return false;
+    return true;
   }
 
   //TODO: do this

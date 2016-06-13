@@ -24,7 +24,7 @@
             android:value="AIzaSyDP0bkfb8N9yVUvngIc8N_OJLxGcAbP_Sc" />
 
         <activity
-            android:name=".Search.SearchActivity"
+            android:name=".search.SearchActivity"
             android:label='Family Map: Search'
             android:parentActivityName=".MainActivity"/>
         <activity
@@ -32,7 +32,7 @@
             android:label='Family Map: Login'
             android:parentActivityName=".MainActivity"/>
         <activity
-            android:name=".PersonPackage.personActivity"
+            android:name=".personPackage.PersonActivity"
             android:label='Family Map: Person Details'
             android:parentActivityName=".MainActivity"/>
         <activity
@@ -41,6 +41,10 @@
             android:parentActivityName=".MainActivity"/>
         <activity
             android:name=".SettingsActivity"
+            android:label='Family Map: Settings'
+            android:parentActivityName=".MainActivity"/>
+        <activity
+            android:name=".filter.FilterActivity"
             android:label='Family Map: Settings'
             android:parentActivityName=".MainActivity"/>
     </application>
